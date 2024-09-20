@@ -1,4 +1,5 @@
 import { DataTypes } from "sequelize";
+import Spell from "./Spell.js";
 
 const Wizard = (db) => {
     return db.define("wizard", {
@@ -10,6 +11,13 @@ const Wizard = (db) => {
         name: DataTypes.STRING,
         intelligence_score: DataTypes.INTEGER,
         level: DataTypes.INTEGER,
+        userId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: "users", // Refers to the user model
+                key: "id",
+            },
+        },
     });
 };
 

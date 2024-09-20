@@ -25,15 +25,17 @@ const SpellSlot = SpellSlotModel(db);
 const User = UserModel(db);
 const WizardSpells = WizardSpellsModel(db);
 
+
+
 const connectToDB = async () => {
     try {
         await db.authenticate();
         console.log("Connected to DB");
 
-        db.sync();
+        db.sync({alter:true});
 
         const exisitingSpells = await Spell.findAll();
-        if (!exisitingSpells){
+        if (!exisitingSpells.length){
         for (const spellData of spellSeed){
             await Spell.create(spellData);
         }}
@@ -45,4 +47,4 @@ const connectToDB = async () => {
 
 await connectToDB();
 
-export { db, Wizard };
+export { db, Wizard, Spell, User };

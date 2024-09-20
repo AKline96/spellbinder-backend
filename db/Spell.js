@@ -14,7 +14,7 @@ const Spell = (db) => {
         range: DataTypes.STRING,
         components: DataTypes.STRING,
         duration: DataTypes.STRING,
-        description: DataTypes.STRING,
+        description: DataTypes.TEXT,
         is_custom: DataTypes.BOOLEAN,
     });
 };
