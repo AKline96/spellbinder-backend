@@ -46,4 +46,4 @@ const connectToDB = async () => {
 Wizard.belongsTo(User); // associate wizard with user
 Wizard.belongsToMany(Spell, { through: "WizardSpells" });
 
-export { db, Wizard, Spell, User };
+export { db, Wizard };

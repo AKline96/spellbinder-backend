@@ -1,8 +1,7 @@
 import express from "express";
 import cors from "cors";
 import Sequelize from "sequelize";
-import { db, Wizard, Spell, User } from "./db/db.js";
-import bcrypt from "bcrypt";
+import { db, Wizard } from "./db/db.js";
 
 const server = express();
 const PORT = 3001;
@@ -72,6 +71,10 @@ server.get("/wizard/:id", authenticateToken, async (req, res) => {
         res.status(500).json({ error: "Failed to fetch wizard data" });
     }
 });
+
+// server.post("/wizards", async (req, res) => {
+//     await Wizard;
+// });
 
 // server.post("/wizards", async (req, res) => {
 //     await Wizard;
