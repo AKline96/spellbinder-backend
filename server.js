@@ -1,10 +1,8 @@
 import express from "express";
 import cors from "cors";
 import Sequelize from "sequelize";
-import { db, Wizard, Spell, SpellSlot, User, WizardSpells } from "./db/db.js";
+import { db, Wizard, Spell, User } from "./db/db.js";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { connectToDB } from "./db/db.js";
 
 const server = express();
 const PORT = 3001;
@@ -75,25 +73,15 @@ server.get("/wizard/:id", authenticateToken, async (req, res) => {
     }
 });
 
-// Endpoint to fetch all spells
-server.get("/spells", async (req, res) => {
-    try {
-        const spells = await Spell.findAll(); // Fetch all spells from the database
-        res.json(spells); // Send spells as a JSON response
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({
-            error: "An error occurred while fetching spells",
-        });
-    }
-});
+// server.post("/wizards", async (req, res) => {
+//     await Wizard;
+// });
 
 // Health check endpoint
 server.get("/", (req, res) => {
     res.send({ server: "running" });
 });
 
-// Sign-up endpoint to create a new user
 server.post("/signup", async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10); // Hash password
@@ -112,11 +100,11 @@ server.post("/signup", async (req, res) => {
     }
 });
 
-// Login endpoint
 server.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
+        // Find the user by username
         const user = await User.findOne({ where: { username } });
         if (!user) {
             return res
@@ -124,6 +112,7 @@ server.post("/login", async (req, res) => {
                 .json({ message: "Username or password incorrect." });
         }
 
+        // Compare the hashed password
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
             return res
@@ -131,12 +120,8 @@ server.post("/login", async (req, res) => {
                 .json({ message: "Username or password incorrect." });
         }
 
-        // Create a token for the user
-        const token = jwt.sign(
-            { id: user.id, username: user.username },
-            JWT_SECRET
-        );
-        res.json({ message: "Login successful", token }); // Respond with the token
+        // Successful login, you can send back user info or a token
+        res.json({ message: "Login successful" });
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }

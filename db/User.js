@@ -8,15 +8,9 @@ const User = (db) => {
             primaryKey: true,
             autoIncrement: true,
         },
-        username: {
-            type: DataTypes.STRING,
-            unique: true,
-            allowNull: false,
-        },
-        password: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
+        username: DataTypes.STRING,
+        password: DataTypes.INTEGER,
+        email: DataTypes.STRING,
         is_active: DataTypes.BOOLEAN,
     });
 };

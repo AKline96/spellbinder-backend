@@ -32,7 +32,7 @@ const connectToDB = async () => {
         await db.sync({ alter: true });
 
         const existingSpells = await Spell.findAll();
-        if (!existingSpells.length) {
+        if (!existingSpells) {
             for (const spellData of spellSeed) {
                 await Spell.create(spellData);
             }
@@ -46,4 +46,4 @@ const connectToDB = async () => {
 Wizard.belongsTo(User); // associate wizard with user
 Wizard.belongsToMany(Spell, { through: "WizardSpells" });
 
-export { db, Wizard, Spell, SpellSlot, User, WizardSpells, connectToDB };
+export { db, Wizard, Spell, User };
