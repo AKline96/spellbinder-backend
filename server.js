@@ -1,9 +1,10 @@
 import express from "express";
 import cors from "cors";
 import Sequelize from "sequelize";
-import { db, Wizard, Spell, User } from "./db/db.js"; // Ensure User is imported correctly
+import { db, Wizard, Spell, SpellSlot, User, WizardSpells } from "./db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { connectToDB } from "./db/db.js";
 
 const server = express();
 const PORT = 3001;
@@ -39,12 +40,13 @@ server.get("/wizards", authenticateToken, async (req, res) => {
 // Endpoint to create a new wizard for the authenticated user
 server.post("/wizard", authenticateToken, async (req, res) => {
     try {
-        const { name, level } = req.body; // Expecting name and level in the request body
+        const { name, intelligence_score, level } = req.body; // Expecting name, intelligence_score, and level in the request body
         const userId = req.user.id; // Get the userId from the logged-in user's session or token
 
         // Create a new wizard and associate it with the user
         const newWizard = await Wizard.create({
             name,
+            intelligence_score, // Include intelligence_score in the wizard creation
             level,
             userId, // Associate the wizard with the user
         });
@@ -132,17 +134,37 @@ server.post("/login", async (req, res) => {
         // Create a token for the user
         const token = jwt.sign(
             { id: user.id, username: user.username },
-            process.env.JWT_SECRET, // Use the secret from your environment variables
-            { expiresIn: "1h" } // Optional: Set token expiration time
+            JWT_SECRET
         );
-
         res.json({ message: "Login successful", token }); // Respond with the token
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }
 });
 
-// Start the server
-server.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server is listening on port ${PORT}`);
+server.get("/spells", async (req, res) => {
+    const { level } = req.query;
+
+    try {
+        const spells = await Spell.findAll({
+            where: {
+                level: level, // Assuming your spells table has a level column
+            },
+        });
+        res.json(spells);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            error: "An error occurred while fetching spells",
+        });
+    }
 });
+
+const startServer = async () => {
+    await connectToDB();
+    server.listen(PORT, "0.0.0.0", () => {
+        console.log(`Server is listening on port ${PORT}`);
+    });
+};
+
+startServer();

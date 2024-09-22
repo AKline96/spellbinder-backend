@@ -1,4 +1,5 @@
 import { DataTypes } from "sequelize";
+import { db } from "./db.js";
 
 const WizardSpells = (db) => {
     return db.define("wizardspells", {

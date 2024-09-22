@@ -4,8 +4,7 @@ import SpellModel from "./Spell.js";
 import SpellSlotModel from "./SpellSlot.js";
 import UserModel from "./User.js";
 import WizardSpellsModel from "./WizardSpells.js";
-import spellSeed from "./spellSeed.json" with {type: "json"};
-// process.env.DATABASE_URL
+import spellSeed from "./spellSeed.json" with { type: "json" };
 
 let db;
 
@@ -19,26 +18,25 @@ if (process.env.DATABASE_URL === undefined) {
         logging: false,
     });
 }
+
 const Wizard = WizardModel(db);
 const Spell = SpellModel(db);
 const SpellSlot = SpellSlotModel(db);
 const User = UserModel(db);
 const WizardSpells = WizardSpellsModel(db);
 
-
-
 const connectToDB = async () => {
     try {
         await db.authenticate();
         console.log("Connected to DB");
+        await db.sync({ alter: true });
 
-        db.sync({alter:true});
-
-        const exisitingSpells = await Spell.findAll();
-        if (!exisitingSpells.length){
-        for (const spellData of spellSeed){
-            await Spell.create(spellData);
-        }}
+        const existingSpells = await Spell.findAll();
+        if (!existingSpells.length) {
+            for (const spellData of spellSeed) {
+                await Spell.create(spellData);
+            }
+        }
     } catch (error) {
         console.error(error);
         console.log("DB ISSUE");
@@ -48,6 +46,4 @@ const connectToDB = async () => {
 Wizard.belongsTo(User); // associate wizard with user
 Wizard.belongsToMany(Spell, { through: "WizardSpells" });
 
-await connectToDB();
-
-export { db, Wizard, Spell, User };
+export { db, Wizard, Spell, SpellSlot, User, WizardSpells, connectToDB };
