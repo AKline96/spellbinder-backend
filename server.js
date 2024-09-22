@@ -1,22 +1,63 @@
 import express from "express";
 import cors from "cors";
-import pg from "pg";
 import Sequelize from "sequelize";
-import { db, Wizard, Spell, User } from "./db/db.js";
+import { db, Wizard, Spell, User } from "./db/db.js"; // Ensure User is imported correctly
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const server = express();
+const PORT = 3001;
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret"; // Ensure your JWT secret is defined
 
+// Middleware for CORS and JSON body parsing
 server.use(cors());
 server.use(express.json());
 
-server.get("/wizard", async (req, res) => {
-    res.send({ wizard: await Wizard.findAll() });
+// Authentication middleware to protect routes
+const authenticateToken = (req, res, next) => {
+    const token = req.headers["authorization"]?.split(" ")[1]; // Get token from Authorization header
+    if (!token) return res.sendStatus(401); // No token provided
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.sendStatus(403); // Token is invalid
+        req.user = user; // Save user data to request
+        next(); // Proceed to next middleware/route
+    });
+};
+
+// Endpoint to fetch all wizards for the authenticated user
+server.get("/wizards", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id; // Get the userId from the logged-in user's session or token
+        const wizards = await Wizard.findAll({ where: { userId } }); // Fetch wizards for this user
+        res.json(wizards); // Respond with the user's wizards
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch wizards" });
+    }
 });
 
-server.get("/wizard/:id", async (req, res) => {
+// Endpoint to create a new wizard for the authenticated user
+server.post("/wizard", authenticateToken, async (req, res) => {
     try {
-        // Find the wizard by ID (assuming the ID is passed in the URL)
+        const { name, level } = req.body; // Expecting name and level in the request body
+        const userId = req.user.id; // Get the userId from the logged-in user's session or token
+
+        // Create a new wizard and associate it with the user
+        const newWizard = await Wizard.create({
+            name,
+            level,
+            userId, // Associate the wizard with the user
+        });
+
+        res.status(201).json({ newWizard }); // Respond with the created wizard
+    } catch (error) {
+        res.status(400).json({ message: "Error creating wizard", error });
+    }
+});
+
+// Endpoint to fetch a specific wizard by ID
+server.get("/wizard/:id", authenticateToken, async (req, res) => {
+    try {
         const wizard = await Wizard.findByPk(req.params.id);
         if (wizard) {
             res.json({
@@ -32,12 +73,6 @@ server.get("/wizard/:id", async (req, res) => {
     }
 });
 
-server.post("/wizard", async (req, res) => {
-    console.log(req.body);
-    const newWizard = await Wizard.create(req.body);
-    res.send({ newWizard });
-});
-
 // Endpoint to fetch all spells
 server.get("/spells", async (req, res) => {
     try {
@@ -51,10 +86,12 @@ server.get("/spells", async (req, res) => {
     }
 });
 
+// Health check endpoint
 server.get("/", (req, res) => {
     res.send({ server: "running" });
 });
 
+// Sign-up endpoint to create a new user
 server.post("/signup", async (req, res) => {
     const { username, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10); // Hash password
@@ -73,11 +110,11 @@ server.post("/signup", async (req, res) => {
     }
 });
 
+// Login endpoint
 server.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        // Find the user by username
         const user = await User.findOne({ where: { username } });
         if (!user) {
             return res
@@ -85,7 +122,6 @@ server.post("/login", async (req, res) => {
                 .json({ message: "Username or password incorrect." });
         }
 
-        // Compare the hashed password
         const match = await bcrypt.compare(password, user.password);
         if (!match) {
             return res
@@ -93,13 +129,20 @@ server.post("/login", async (req, res) => {
                 .json({ message: "Username or password incorrect." });
         }
 
-        // Successful login, you can send back user info or a token
-        res.json({ message: "Login successful" });
+        // Create a token for the user
+        const token = jwt.sign(
+            { id: user.id, username: user.username },
+            process.env.JWT_SECRET, // Use the secret from your environment variables
+            { expiresIn: "1h" } // Optional: Set token expiration time
+        );
+
+        res.json({ message: "Login successful", token }); // Respond with the token
     } catch (error) {
         res.status(500).json({ message: "Internal server error" });
     }
 });
 
-server.listen(3001, "0.0.0.0", () => {
-    console.log("Server is listening");
+// Start the server
+server.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is listening on port ${PORT}`);
 });

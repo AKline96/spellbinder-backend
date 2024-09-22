@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import Spell from "./Spell.js";
+import { User } from "./db.js";
 
 const Wizard = (db) => {
     return db.define("wizard", {
