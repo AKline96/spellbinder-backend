@@ -51,6 +51,56 @@ server.get("/spells", async (req, res) => {
     }
 });
 
+server.get("/wizards/:wizardId/spells", async (req, res) => {
+    const wizardId = req.params.wizardId;
+    try {
+        const knownSpells = await db.wizardspells.findAll({
+            where: { wizardId },
+            include: [{ model: db.spells }], // Include spell details
+        });
+        res.json(knownSpells);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+server.patch("/wizardspells/:id", async (req, res) => {
+    const { is_known } = req.body; // Expecting is_known in the body
+    try {
+        const wizardSpell = await db.wizardspells.findByPk(req.params.id);
+        if (!wizardSpell) return res.status(404).json({ error: "Not found" });
+        wizardSpell.is_known = is_known; // Update the known status
+        await wizardSpell.save();
+        res.json(wizardSpell);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+server.put("/wizards/:wizardId/spells/:spellId", async (req, res) => {
+    const { wizardId, spellId } = req.params;
+    const { is_known } = req.body;
+
+    try {
+        const wizardSpell = await WizardSpells.findOne({
+            where: {
+                wizardId: wizardId,
+                spellId: spellId,
+            },
+        });
+
+        if (wizardSpell) {
+            wizardSpell.is_known = is_known;
+            await wizardSpell.save();
+            res.status(200).json(wizardSpell);
+        } else {
+            res.status(404).json({ message: "WizardSpell not found." });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 server.get("/", (req, res) => {
     res.send({ server: "running" });
 });

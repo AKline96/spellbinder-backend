@@ -7,6 +7,20 @@ const WizardSpells = (db) => {
             primaryKey: true,
             autoIncrement: true,
         },
+        wizardId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: "wizards",
+                key: "id",
+            },
+        },
+        spellId: {
+            type: DataTypes.INTEGER,
+            references: {
+                model: "spells",
+                key: "id",
+            },
+        },
         is_known: DataTypes.BOOLEAN,
         is_prepared: DataTypes.BOOLEAN,
         is_active: DataTypes.BOOLEAN,
