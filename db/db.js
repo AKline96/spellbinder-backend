@@ -39,6 +39,8 @@ const connectToDB = async () => {
         for (const spellData of spellSeed){
             await Spell.create(spellData);
         }}
+
+        WizardSpells.belongsTo(Spell, {foreignKey: "spellId"})
     } catch (error) {
         console.error(error);
         console.log("DB ISSUE");
@@ -47,4 +49,4 @@ const connectToDB = async () => {
 
 await connectToDB();
 
-export { db, Wizard, Spell, User };
+export { db, Wizard, Spell, User, WizardSpells };

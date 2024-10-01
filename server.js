@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import pg from "pg";
 import Sequelize from "sequelize";
-import { db, Wizard, Spell, User } from "./db/db.js";
+import { db, Wizard, Spell, User, WizardSpells } from "./db/db.js";
 import bcrypt from "bcrypt";
 
 const server = express();
@@ -54,22 +54,23 @@ server.get("/spells", async (req, res) => {
 server.get("/wizards/:wizardId/spells", async (req, res) => {
     const wizardId = req.params.wizardId;
     try {
-        const knownSpells = await db.wizardspells.findAll({
+        const knownSpells = await WizardSpells.findAll({
             where: { wizardId },
-            include: [{ model: db.spells }], // Include spell details
+            include: [{ model: Spell }], // Include spell details
         });
         res.json(knownSpells);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: error.message });
     }
 });
 
 server.patch("/wizardspells/:id", async (req, res) => {
-    const { is_known } = req.body; // Expecting is_known in the body
+    const { is_known } = req.body;
     try {
         const wizardSpell = await db.wizardspells.findByPk(req.params.id);
         if (!wizardSpell) return res.status(404).json({ error: "Not found" });
-        wizardSpell.is_known = is_known; // Update the known status
+        wizardSpell.is_known = is_known;
         await wizardSpell.save();
         res.json(wizardSpell);
     } catch (error) {
@@ -99,6 +100,19 @@ server.put("/wizards/:wizardId/spells/:spellId", async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+});
+
+server.post("/learnSpell", async (req, res) => {
+    await WizardSpells.create({
+        wizardId: req.body.wizardId,
+        spellId: req.body.spellId,
+    });
+    res.send({
+        knownSpells: await WizardSpells.findAll({
+            where: { wizardId: req.body.wizardId },
+            include: [Spell],
+        }),
+    });
 });
 
 server.get("/", (req, res) => {
