@@ -164,6 +164,23 @@ server.post("/login", async (req, res) => {
     }
 });
 
+server.delete("/wizard/:id", async (req, res) => {
+    const wizardId = req.params.id;
+    try {
+        // Perform the deletion operation
+        const deletedWizard = await Wizard.destroy({ where: { id: wizardId } });
+
+        if (deletedWizard) {
+            return res.status(204).send(); // No content to send back
+        } else {
+            return res.status(404).send({ error: "Wizard not found" });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ error: "Failed to delete wizard" });
+    }
+});
+
 server.listen(3001, "0.0.0.0", () => {
     console.log("Server is listening");
 });

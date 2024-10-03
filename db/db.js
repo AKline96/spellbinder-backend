@@ -25,7 +25,10 @@ const SpellSlot = SpellSlotModel(db);
 const User = UserModel(db);
 const WizardSpells = WizardSpellsModel(db);
 
-
+Wizard.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
+Wizard.belongsToMany(Spell, { through: WizardSpells, foreignKey: "wizardId" });
+Spell.belongsToMany(Wizard, { through: WizardSpells, foreignKey: "spellId" });
+WizardSpells.belongsTo(Spell, { foreignKey: "spellId" });
 
 const connectToDB = async () => {
     try {
@@ -40,7 +43,7 @@ const connectToDB = async () => {
             await Spell.create(spellData);
         }}
 
-        WizardSpells.belongsTo(Spell, {foreignKey: "spellId"})
+        // WizardSpells.belongsTo(Spell, {foreignKey: "spellId"})
     } catch (error) {
         console.error(error);
         console.log("DB ISSUE");
